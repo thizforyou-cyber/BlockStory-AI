@@ -10,8 +10,8 @@ GitHub Pages can host the browser editor but cannot run the `/api/ai` server fun
 2. Import `thizforyou-cyber/BlockStory-AI` from GitHub.
 3. Keep the default settings and deploy. Vercel detects the `api/ai.js` serverless function and installs `@huggingface/inference` from `package.json`.
 4. In Vercel, open **Project → Settings → Environment Variables**.
-5. Add `HF_TOKEN` with a Hugging Face access token that has **Inference Providers** permission. Apply it to Production (and Preview if desired), then redeploy.
-6. Open the Vercel website URL. The `/api/ai` endpoint is same-origin, so the browser page never sees the private token.
+5. Add `GEMINI_API_KEY` only if you want the optional AI storyboard writer. The public LTX video workspace does not require a provider token.
+6. Open the Vercel website URL. The `/api/ai` endpoint is same-origin, so the browser page never sees the private key.
 
 For a token, visit [Hugging Face access tokens](https://huggingface.co/settings/tokens). Do not paste the token into the website, `index.html`, or a public GitHub file. `.env.example` is only a template.
 
@@ -21,7 +21,7 @@ You may still publish the static editor through **GitHub Settings → Pages**, b
 
 - Enter a story prompt and generate a connected scene outline using the built-in local fallback.
 - Optional AI storyboard writer: ask a hosted language model to draft 4–6 connected scenes, then edit them in the timeline.
-- Optional AI text-to-video: send the prompt to Hugging Face Inference Providers (Wan-AI/Wan2.2-TI2V-5B via fal.ai) and preview/download the returned clip.
+- Public free text-to-video workspace: embed the Lightricks LTX Video Hugging Face Space directly in the studio, build a Roblox-inspired prompt from the story settings, and copy it into the generator. Download the generated MP4 from the public model workspace.
 - Create a block-style 3D city or forest with a hero, enemy and glowing object.
 - Preview 3D characters and basic actions: idle, run, jump, power-up, attack and celebrate.
 - Drag the preview to rotate the camera; choose wide, close or cinematic camera framing.
@@ -32,11 +32,11 @@ You may still publish the static editor through **GitHub Settings → Pages**, b
 
 ## Important limitations and costs
 
-The AI buttons are now connected to a real backend route, but they work only after this repository is deployed to a Node.js host such as Vercel and a valid `HF_TOKEN` is added as a server-side environment variable. The backend uses Hugging Face Inference Providers and does not run the video model on the user's computer.
+The optional AI storyboard writer works only after this repository is deployed to a Node.js host such as Vercel and a valid `GEMINI_API_KEY` is added as a server-side environment variable. The public LTX video workspace is hosted separately by Hugging Face and does not require an API key in this project.
 
-Hugging Face currently lists only a small monthly free allowance for free accounts (subject to change); extra inference is pay-as-you-go. Check [current pricing](https://huggingface.co/docs/inference-providers/pricing) before generating repeatedly. A free account does **not** mean unlimited free AI video. Provider queues, model availability, output size and serverless execution limits can also affect generation.
+The public LTX video workspace uses shared Hugging Face GPU capacity. It may have queues, daily usage limits, rate limits or outages; it is not unlimited private GPU hosting. Hugging Face documents ZeroGPU allowances by account type in its [Spaces API documentation](https://huggingface.co/docs/hub/en/spaces-api-endpoints).
 
-The editable Three.js storyboard remains a procedural 3D animation system, not an AI-generated 3D world. The AI video output is a separate generated clip; it is not automatically converted into editable 3D characters or merged with the 3D timeline yet. The browser WebM export captures the 3D canvas; browser speech is not mixed into that WebM audio track.
+The editable Three.js storyboard remains a procedural 3D animation system, not an AI-generated 3D world. The AI video output is a separate generated clip downloaded from the embedded public model workspace; it is not automatically converted into editable 3D characters or merged with the 3D timeline yet. The browser WebM export captures the 3D canvas; browser speech is not mixed into that WebM audio track.
 
 ## Open-source projects used / evaluated
 
