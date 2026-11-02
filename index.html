@@ -31,6 +31,7 @@ textarea,input,select{width:100%;border:1px solid #344157;background:#0d1420;col
 <div class="row"><div><label class="label" for="length">VIDEO LENGTH</label><select id="length"><option value="20">20 sec</option><option value="30" selected>30 sec</option><option value="45">45 sec</option><option value="60">60 sec</option></select></div><div><label class="label" for="style">WORLD STYLE</label><select id="style"><option value="city">Block city</option><option value="forest">Forest</option><option value="school">School</option><option value="space">Space</option></select></div></div>
 <label class="label" for="genre">STORY MOOD</label><select id="genre"><option value="adventure">Adventure</option><option value="funny">Funny</option><option value="scary">Spooky</option><option value="epic">Epic</option></select>
 <button class="full" id="generate">✦ Generate 3D storyboard</button>
+<button class="full secondary" id="aiStoryboard">✧ Write scenes with AI</button>
 <div class="hint">Creates a connected 3D block-world storyboard from your text. You can edit every scene after generation.</div>
 <div class="disclaimer">Honest note: this version builds animated 3D scenes in your browser. It is not yet a hosted AI video model that invents photorealistic footage. Full AI generation needs a GPU-backed model service.</div>
 </aside>
@@ -42,6 +43,15 @@ textarea,input,select{width:100%;border:1px solid #344157;background:#0d1420;col
 <div class="meter"><div id="progress"></div></div><div class="status" id="status">Ready · Drag to rotate the 3D camera</div>
 </div>
 <div class="panel timeline-panel"><div class="timeline-head"><h2>3. Scene timeline</h2><span class="status" id="totalTime">30 seconds</span></div><div class="scene-strip" id="sceneStrip"></div></div>
+<div class="panel timeline-panel" id="aiVideoPanel">
+ <div class="timeline-head"><h2>✦ AI video generation</h2><span class="status" id="aiState">Not connected yet</span></div>
+ <p class="hint">Generate a short original video clip from your story prompt using a hosted AI video model. This is separate from the editable 3D preview.</p>
+ <div class="row"><div><label class="label" for="aiModel">VIDEO MODEL</label><select id="aiModel"><option value="Wan-AI/Wan2.2-TI2V-5B">Wan 2.2 · text to video</option></select></div><div><label class="label" for="aiProvider">PROVIDER</label><select id="aiProvider"><option value="fal-ai">Hugging Face routed · fal.ai</option></select></div></div>
+ <button id="generateAI" class="full">✦ Generate AI video clip</button>
+ <video id="aiVideo" controls playsinline style="display:none;width:100%;margin-top:14px;border-radius:10px;background:#080d19"></video>
+ <div class="editor-actions"><button class="secondary" id="downloadAI" style="display:none">⬇ Download AI clip</button></div>
+ <div class="disclaimer">Requires the BlockStory AI server to be deployed with a private Hugging Face token. The token must stay on the server, never in this page. Free inference credits are very small and can run out; longer or repeated clips may cost money.</div>
+</div>
 <div class="editor-grid">
 <div class="panel"><h2>✎ 4. Edit selected scene</h2>
 <label class="label" for="editTitle">SCENE NAME</label><input id="editTitle" value="The beginning">
@@ -179,6 +189,22 @@ async function exportVideo(){
 }
 function saveProject(){const data={version:1,prompt:$('prompt').value,settings:{length:$('length').value,style:$('style').value,genre:$('genre').value},scenes};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='blockstory-project.json';a.click();URL.revokeObjectURL(url)}
 function loadProjectFile(file){const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.scenes)||!d.scenes.length)throw Error();scenes=d.scenes;$('prompt').value=d.prompt||'';if(d.settings){$('length').value=d.settings.length||30;$('style').value=d.settings.style||'city';$('genre').value=d.settings.genre||'adventure'}sceneIndex=0;makeWorld($('style').value);updateUI();$('status').textContent='Project loaded'}catch(e){alert('That project file could not be opened.')}};r.readAsText(file)}
+async function requestAI(task){
+ const prompt=$('prompt').value.trim();if(!prompt){alert('Write a story prompt first.');return null}
+ const response=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({task,prompt,model:$('aiModel')?.value,provider:$('aiProvider')?.value,style:$('style').value,genre:$('genre').value,length:Number($('length').value)})});
+ if(!response.ok){let message='AI request failed';try{const data=await response.json();message=data.error||message}catch{}throw new Error(message)}
+ return response;
+}
+async function generateAIStoryboard(){
+ const b=$('aiStoryboard');b.disabled=true;b.textContent='✧ AI is writing…';$('status').textContent='Asking the connected AI story writer…';
+ try{const r=await requestAI('storyboard');const data=await r.json();if(!Array.isArray(data.scenes)||!data.scenes.length)throw new Error('The AI returned no scenes.');scenes=data.scenes.map((s,i)=>({title:String(s.title||'Scene '+(i+1)),description:String(s.description||''),dialogue:String(s.dialogue||''),action:['idle','run','jump','power','attack','celebrate'].includes(s.action)?s.action:'idle',duration:Math.max(2,Math.min(30,Number(s.duration)||5)),setting:s.setting||'Block World',hero:s.hero||'Block Noob',villain:s.villain||'Monster',kind:$('style').value,genre:$('genre').value}));sceneIndex=0;makeWorld($('style').value);setCamera();updateUI();$('status').textContent='AI storyboard created · Edit each scene below'}catch(e){$('status').textContent=e.message;alert(e.message)}finally{b.disabled=false;b.textContent='✧ Write scenes with AI'}
+}
+let generatedAIUrl=null;
+async function generateAIVideo(){
+ const b=$('generateAI');b.disabled=true;b.textContent='Generating…';$('aiState').textContent='Sending prompt to AI model…';
+ try{const r=await requestAI('video');const blob=await r.blob();if(!blob.size)throw new Error('The AI provider returned an empty video.');if(generatedAIUrl)URL.revokeObjectURL(generatedAIUrl);generatedAIUrl=URL.createObjectURL(blob);$('aiVideo').src=generatedAIUrl;$('aiVideo').style.display='block';$('downloadAI').style.display='inline-block';$('downloadAI').onclick=()=>{const a=document.createElement('a');a.href=generatedAIUrl;a.download='blockstory-ai-video.mp4';a.click()};$('aiState').textContent='Video generated · ready to preview'}catch(e){$('aiState').textContent='Generation failed';alert(e.message+'\n\nCheck that the backend is deployed and its Hugging Face token is configured.')}finally{b.disabled=false;b.textContent='✦ Generate AI video clip'}
+}
+$('aiStoryboard').onclick=generateAIStoryboard;$('generateAI').onclick=generateAIVideo;
 $('generate').onclick=generate;$('saveScene').onclick=saveScene;$('addScene').onclick=addScene;$('deleteScene').onclick=deleteScene;$('play').onclick=play;$('pause').onclick=pause;$('reset').onclick=restart;$('export').onclick=exportVideo;$('camera').onchange=setCamera;$('saveProject').onclick=saveProject;$('loadProject').onclick=()=>$('projectFile').click();$('projectFile').onchange=e=>{if(e.target.files[0])loadProjectFile(e.target.files[0])};
 generate();requestAnimationFrame(loop);
 </script>
