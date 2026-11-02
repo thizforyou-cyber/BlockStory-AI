@@ -75,6 +75,7 @@ renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 const world=new THREE.Scene();world.background=new THREE.Color('#a9c6dc');world.fog=new THREE.Fog('#a9c6dc',24,65);
 const camera=new THREE.PerspectiveCamera(43,16/9,.1,150);camera.position.set(13,10,17);
+const captionCanvas=document.createElement('canvas');captionCanvas.width=1024;captionCanvas.height=150;const captionCtx=captionCanvas.getContext('2d');const captionTexture=new THREE.CanvasTexture(captionCanvas);const captionPlane=new THREE.Mesh(new THREE.PlaneGeometry(10,1.46),new THREE.MeshBasicMaterial({map:captionTexture,transparent:true,depthTest:false,depthWrite:false}));captionPlane.position.set(0,-3.0,-8);captionPlane.renderOrder=1000;camera.add(captionPlane);
 const controls=new OrbitControls(camera,canvas);controls.target.set(0,2,0);controls.enableDamping=true;controls.maxPolarAngle=Math.PI*.48;controls.minDistance=7;controls.maxDistance=35;
 world.add(new THREE.HemisphereLight('#eaf4ff','#586273',2));
 const sun=new THREE.DirectionalLight('#fff0d4',3.2);sun.position.set(-8,18,10);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);world.add(sun);
@@ -130,7 +131,9 @@ function renderTimeline(){
  $('totalTime').textContent=Math.round(scenes.reduce((a,s)=>a+s.duration,0))+' seconds';
 }
 function escapeHtml(x){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function updateUI(){const s=selected();if(!s)return;$('sceneCounter').textContent='SCENE '+(sceneIndex+1)+' / '+scenes.length;$('overlayTitle').textContent=s.title;$('overlayCaption').textContent=s.dialogue;renderTimeline();updateEditor();updateCharacterMotion(0)}
+function drawCaption(){const s=selected();if(!s)return;captionCtx.clearRect(0,0,1024,150);captionCtx.fillStyle='rgba(5,10,20,.84)';captionCtx.beginPath();captionCtx.roundRect(22,15,980,120,22);captionCtx.fill();captionCtx.fillStyle='#ffffff';captionCtx.font='bold 25px system-ui';captionCtx.textAlign='center';captionCtx.fillText(s.dialogue||s.description||'',512,88,920);captionTexture.needsUpdate=true}
+function narrate(s){if($('voice').value!=='on'||!('speechSynthesis'in window)||!s?.dialogue)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(s.dialogue);u.rate=1.02;speechSynthesis.speak(u)}
+function updateUI(){const s=selected();if(!s)return;drawCaption();$('sceneCounter').textContent='SCENE '+(sceneIndex+1)+' / '+scenes.length;$('overlayTitle').textContent=s.title;$('overlayCaption').textContent=s.dialogue;renderTimeline();updateEditor();updateCharacterMotion(0)}
 function updateCharacterMotion(t){
  const s=selected();if(!s||!hero)return;
  const action=s.action;const wave=Math.sin(t*4);
@@ -153,14 +156,14 @@ function setCamera(){
 function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
 new ResizeObserver(resize).observe(canvas);
 makeWorld('city');
-function loop(now){raf=requestAnimationFrame(loop);const s=selected();if(s){updateCharacterMotion(now/1000);if(playing){const total=scenes.reduce((a,x)=>a+x.duration,0);const e=elapsedBefore+(now-playStart)/1000;if(e>=total){playing=false;elapsedBefore=0;$('status').textContent='Movie preview finished';$('progress').style.width='100%'}else{let acc=0;for(let i=0;i<scenes.length;i++){if(e<acc+scenes[i].duration){if(i!==sceneIndex){sceneIndex=i;updateUI()}break}acc+=scenes[i].duration}$('progress').style.width=(e/total*100)+'%';$('status').textContent='Playing · '+e.toFixed(1)+'s / '+total.toFixed(0)+'s'}}}
+function loop(now){raf=requestAnimationFrame(loop);const s=selected();if(s){updateCharacterMotion(now/1000);if(playing){const total=scenes.reduce((a,x)=>a+x.duration,0);const e=elapsedBefore+(now-playStart)/1000;if(e>=total){playing=false;elapsedBefore=0;$('status').textContent='Movie preview finished';$('progress').style.width='100%'}else{let acc=0;for(let i=0;i<scenes.length;i++){if(e<acc+scenes[i].duration){if(i!==sceneIndex){sceneIndex=i;updateUI();narrate(scenes[i])}break}acc+=scenes[i].duration}$('progress').style.width=(e/total*100)+'%';$('status').textContent='Playing · '+e.toFixed(1)+'s / '+total.toFixed(0)+'s'}}}
  controls.update();renderer.render(world,camera)}
 function generate(){const p=$('prompt').value.trim();if(!p){alert('Write your story idea first.');return}const kind=$('style').value;scenes=storyPlan(p,+$('length').value,kind,$('genre').value);sceneIndex=0;makeWorld(kind);setCamera();updateUI();elapsedBefore=0;$('progress').style.width='0%';$('status').textContent='3D storyboard created · Edit any scene below'}
 function saveScene(){const s=selected();if(!s)return;s.title=$('editTitle').value.trim()||'Untitled scene';s.description=$('editAction').value.trim();s.dialogue=$('editDialogue').value.trim();s.duration=Math.max(2,Math.min(30,+$('editDuration').value||5));s.action=$('editMove').value;updateUI();$('status').textContent='Scene updated'}
 function addScene(){const s=selected()||{setting:'Block City',kind:$('style').value,hero:'Block Noob',villain:'Monster',genre:'adventure'};scenes.splice(sceneIndex+1,0,{...s,title:'New scene',description:'Describe the next moment in your story.',dialogue:'',duration:5,action:'idle'});sceneIndex++;updateUI()}
 function deleteScene(){if(scenes.length<=1){alert('Keep at least one scene.');return}scenes.splice(sceneIndex,1);sceneIndex=Math.max(0,sceneIndex-1);updateUI()}
-function play(){if(!scenes.length)generate();if(!scenes.length)return;playing=true;playStart=performance.now();elapsedBefore=0;$('status').textContent='Playing movie preview'}
-function pause(){if(playing){elapsedBefore+=(performance.now()-playStart)/1000;playing=false;$('status').textContent='Paused'}}
+function play(){if(!scenes.length)generate();if(!scenes.length)return;playing=true;playStart=performance.now();elapsedBefore=0;narrate(selected());$('status').textContent='Playing movie preview'}
+function pause(){if(playing){elapsedBefore+=(performance.now()-playStart)/1000;playing=false;if('speechSynthesis'in window)speechSynthesis.cancel();$('status').textContent='Paused'}}
 function restart(){playing=false;elapsedBefore=0;sceneIndex=0;updateUI();$('progress').style.width='0%';$('status').textContent='Movie restarted'}
 async function exportVideo(){
  if(!scenes.length){generate();if(!scenes.length)return}
@@ -171,7 +174,7 @@ async function exportVideo(){
  const chunks=[];rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
  rec.onstop=()=>{const blob=new Blob(chunks,{type:rec.mimeType||'video/webm'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='blockstory-3d-movie.webm';a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);stream.getTracks().forEach(t=>t.stop());$('status').textContent='WebM movie downloaded'};
  sceneIndex=0;updateUI();$('status').textContent='Recording 3D movie…';rec.start(250);const start=performance.now();
- while(performance.now()-start<total*1000){const e=(performance.now()-start)/1000;let acc=0;for(let i=0;i<scenes.length;i++){if(e<acc+scenes[i].duration){if(sceneIndex!==i){sceneIndex=i;updateUI()}break}acc+=scenes[i].duration}$('progress').style.width=(e/total*100)+'%';await new Promise(r=>setTimeout(r,40))}
+ while(performance.now()-start<total*1000){const e=(performance.now()-start)/1000;let acc=0;for(let i=0;i<scenes.length;i++){if(e<acc+scenes[i].duration){if(sceneIndex!==i){sceneIndex=i;updateUI();narrate(scenes[i])}break}acc+=scenes[i].duration}$('progress').style.width=(e/total*100)+'%';await new Promise(r=>setTimeout(r,40))}
  rec.stop();sceneIndex=0;updateUI();$('progress').style.width='0%';
 }
 function saveProject(){const data={version:1,prompt:$('prompt').value,settings:{length:$('length').value,style:$('style').value,genre:$('genre').value},scenes};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='blockstory-project.json';a.click();URL.revokeObjectURL(url)}
