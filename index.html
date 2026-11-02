@@ -51,6 +51,28 @@ textarea,input,select{width:100%;border:1px solid var(--line);background:#0c1426
 </div>
 <div><div class="preview-head" style="border-radius:12px;margin-bottom:9px"><strong>Storyboard</strong><small>EDITABLE</small></div><div class="scene-list" id="scenes"><div class="hint">Your generated scenes will appear here.</div></div></div>
 </div>
+<div class="panel" style="margin-top:14px">
+<h2>🛠️ Scene editor — make your story yours</h2>
+<div class="row">
+  <div><label class="label" for="editTitle">SCENE TITLE</label><input id="editTitle" placeholder="Scene title"></div>
+  <div><label class="label" for="editDuration">SCENE LENGTH (SECONDS)</label><input id="editDuration" type="number" min="2" max="30" value="5"></div>
+</div>
+<label class="label" for="editDescription">WHAT HAPPENS IN THIS SCENE?</label><textarea id="editDescription" style="min-height:75px" placeholder="Describe the action..."></textarea>
+<label class="label" for="editDialogue">CHARACTER DIALOGUE / NARRATION</label><input id="editDialogue" placeholder="What should the character say?">
+<div class="actions">
+<button class="secondary" id="saveScene">Save scene changes</button>
+<button class="secondary" id="addScene">＋ Add scene</button>
+<button class="secondary" id="deleteScene">Delete selected scene</button>
+</div>
+<div class="hint">Choose a scene in the storyboard, edit its text and timing, then save. Your character names and story world stay consistent across generated scenes.</div>
+</div>
+<div class="panel" style="margin-top:14px">
+<h2>🚀 The complete BlockStory vision</h2>
+<div class="row" style="flex-wrap:wrap">
+ <div class="stat">✓ One-sentence story input</div><div class="stat">✓ Connected storyboard</div><div class="stat">✓ Recurring hero & villain</div><div class="stat">✓ Scene dialogue</div><div class="stat">✓ Animated preview</div><div class="stat">✓ On-screen subtitles</div><div class="stat">✓ Browser narration</div><div class="stat">✓ Web video export</div>
+</div>
+<p class="hint" style="margin-top:12px">The current free browser build creates procedural 2D block-world animation. True AI-generated 3D Roblox characters, model-driven motion, cinematic scene generation and reliable MP4 rendering need a video-generation engine and compute service; those are not secretly simulated here. The project is structured as the website foundation for those upgrades.</p>
+</div>
 </section>
 </div>
 </main>
@@ -86,7 +108,7 @@ function draw(t=0){
 }
 function wrapText(text,x,y,max,line){let words=text.split(' '),str='';for(let w of words){let test=str+w+' ';if(ctx.measureText(test).width>max&&str){ctx.fillText(str,x,y);str=w+' ';y+=line}else str=test}ctx.fillText(str,x,y)}
 function renderList(){ $('sceneCount').textContent=scenes.length+' scenes';$('scenes').innerHTML='';scenes.forEach((s,i)=>{let b=document.createElement('button');b.className='scene'+(i===current?' active':'');b.innerHTML='<strong>0'+(i+1)+' · '+s.title+'</strong><span>'+s.description+'</span>';b.onclick=()=>{current=i;refresh();draw(performance.now())};$('scenes').appendChild(b)});refresh()}
-function refresh(){let s=scenes[current];$('sceneTitle').textContent=s?s.title:'Your preview will appear here';$('sceneNumber').textContent=`SCENE ${scenes.length?current+1:0} / ${scenes.length}`;$('sceneDescription').textContent=s?s.description:'Generate a storyboard to begin.';renderSceneButtons();draw(performance.now())}
+function refresh(){let s=scenes[current];$('sceneTitle').textContent=s?s.title:'Your preview will appear here';$('sceneNumber').textContent=`SCENE ${scenes.length?current+1:0} / ${scenes.length}`;$('sceneDescription').textContent=s?s.description:'Generate a storyboard to begin.';renderSceneButtons();loadEditor();draw(performance.now())}
 function renderSceneButtons(){document.querySelectorAll('.scene').forEach((b,i)=>b.classList.toggle('active',i===current))}
 function generate(){let p=$('prompt').value.trim();if(!p){alert('Write a story idea first.');return}scenes=planStory(p,+$('duration').value,$('mood').value);current=0;renderList();$('status').textContent='Storyboard ready';draw(performance.now())}
 function tick(now){if(!playing)return;let elapsed=(now-startAt)/1000,total=scenes.reduce((a,s)=>a+s.duration,0);if(elapsed>=total){playing=false;$('status').textContent='Preview finished';$('progress').style.width='100%';return}let acc=0,idx=0;for(;idx<scenes.length-1;idx++){if(elapsed<acc+scenes[idx].duration)break;acc+=scenes[idx].duration}if(idx!==current){current=idx;refresh()}draw(now);$('clock').textContent='00:'+String(Math.floor(elapsed)).padStart(2,'0');$('progress').style.width=(elapsed/total*100)+'%';raf=requestAnimationFrame(tick)}
@@ -105,6 +127,31 @@ async function exportVideo(){
  for(let i=0;i<scenes.length;i++){current=i;refresh();speak(scenes[i].dialogue);let start=performance.now(),dur=scenes[i].duration*1000;while(performance.now()-start<dur){draw(performance.now());elapsed+=16;$('progress').style.width=(Math.min(100,elapsed/(total*1000)*100))+'%';$('clock').textContent='00:'+String(Math.floor(elapsed/1000)).padStart(2,'0');await new Promise(r=>setTimeout(r,16))}}
  if(recorder.state!=='inactive')recorder.stop();if('speechSynthesis'in window)speechSynthesis.cancel();
 }
-$('generate').onclick=generate;$('play').onclick=play;$('stop').onclick=stop;$('export').onclick=exportVideo;
-generate();
+function loadEditor(){
+ const s=scenes[current]; if(!s)return;
+ $('editTitle').value=s.title||'';
+ $('editDuration').value=Math.max(2,Math.round(s.duration||5));
+ $('editDescription').value=s.description||'';
+ $('editDialogue').value=s.dialogue||'';
+}
+function saveScene(){
+ const s=scenes[current];if(!s)return;
+ s.title=$('editTitle').value.trim()||'Untitled scene';
+ s.description=$('editDescription').value.trim();
+ s.dialogue=$('editDialogue').value.trim();
+ s.duration=Math.max(2,Math.min(30,Number($('editDuration').value)||5));
+ renderList();$('status').textContent='Scene changes saved';
+}
+function addScene(){
+ const base=scenes[current]||{hero:'Block Noob',villain:'Giant Monster',setting:'Block City',mood:$('mood').value};
+ scenes.splice(current+1,0,{title:'New scene',description:'Describe what happens next in your story.',dialogue:'',action:'idle',duration:5,hero:base.hero,villain:base.villain,setting:base.setting,mood:base.mood,seed:scenes.length});
+ current++;renderList();loadEditor();$('status').textContent='New scene added';
+}
+function deleteScene(){
+ if(!scenes.length)return;
+ if(scenes.length===1){alert('Keep at least one scene in your movie.');return}
+ scenes.splice(current,1);current=Math.max(0,current-1);renderList();loadEditor();$('status').textContent='Scene deleted';
+}
+$('generate').onclick=generate;$('play').onclick=play;$('stop').onclick=stop;$('export').onclick=exportVideo;$('saveScene').onclick=saveScene;$('addScene').onclick=addScene;$('deleteScene').onclick=deleteScene;
+generate();loadEditor();
 </script></body></html>
