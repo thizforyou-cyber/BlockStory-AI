@@ -1,0 +1,10 @@
+{
+  "name": "blockstory-ai",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Website-only block-world 3D story and AI video studio",
+  "dependencies": {
+    "@huggingface/inference": "^4.7.1"
+  }
+}
