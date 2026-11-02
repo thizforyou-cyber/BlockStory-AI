@@ -30,10 +30,10 @@ textarea,input,select{width:100%;border:1px solid #344157;background:#0d1420;col
 <textarea id="prompt" placeholder="A noob discovers a zombie in the city...">A brave Roblox noob discovers a zombie attacking the city. He runs, finds a glowing power crystal, fights the zombie and saves everyone.</textarea>
 <div class="row"><div><label class="label" for="length">VIDEO LENGTH</label><select id="length"><option value="20">20 sec</option><option value="30" selected>30 sec</option><option value="45">45 sec</option><option value="60">60 sec</option></select></div><div><label class="label" for="style">WORLD STYLE</label><select id="style"><option value="city">Block city</option><option value="forest">Forest</option><option value="school">School</option><option value="space">Space</option></select></div></div>
 <label class="label" for="genre">STORY MOOD</label><select id="genre"><option value="adventure">Adventure</option><option value="funny">Funny</option><option value="scary">Spooky</option><option value="epic">Epic</option></select>
-<button class="full" id="generate">✦ Generate 3D storyboard</button>
-<button class="full secondary" id="aiStoryboard">✧ Write scenes with AI</button>
-<div class="hint">Creates a connected 3D block-world storyboard from your text. You can edit every scene after generation.</div>
-<div class="disclaimer">Honest note: this version builds animated 3D scenes in your browser. It is not yet a hosted AI video model that invents photorealistic footage. Full AI generation needs a GPU-backed model service.</div>
+<button class="full" id="aiMovie">✦ Create my movie with AI</button>
+<button class="full secondary" id="generate">Build 3D scenes without AI</button>
+<div class="hint">One click: AI writes your story scenes, builds the 3D movie timeline and starts the animated preview. You can edit scenes and export the finished movie.</div>
+<div class="disclaimer">This creates an original animated 3D block-world movie in your browser using AI-written scenes. It does not generate new 3D character models or photorealistic AI footage. Export your animation as a WebM video.</div>
 </aside>
 <section class="main-area">
 <div class="panel stage-panel">
@@ -195,16 +195,16 @@ async function requestAI(task){
  if(!response.ok){let message='AI request failed';try{const data=await response.json();message=data.error||message}catch{}throw new Error(message)}
  return response;
 }
-async function generateAIStoryboard(){
- const b=$('aiStoryboard');b.disabled=true;b.textContent='✧ AI is writing…';$('status').textContent='Asking the connected AI story writer…';
- try{const r=await requestAI('storyboard');const data=await r.json();if(!Array.isArray(data.scenes)||!data.scenes.length)throw new Error('The AI returned no scenes.');scenes=data.scenes.map((s,i)=>({title:String(s.title||'Scene '+(i+1)),description:String(s.description||''),dialogue:String(s.dialogue||''),action:['idle','run','jump','power','attack','celebrate'].includes(s.action)?s.action:'idle',duration:Math.max(2,Math.min(30,Number(s.duration)||5)),setting:s.setting||'Block World',hero:s.hero||'Block Noob',villain:s.villain||'Monster',kind:$('style').value,genre:$('genre').value}));sceneIndex=0;makeWorld($('style').value);setCamera();updateUI();$('status').textContent='AI storyboard created · Edit each scene below'}catch(e){$('status').textContent=e.message;alert(e.message)}finally{b.disabled=false;b.textContent='✧ Write scenes with AI'}
+async function generateAIStoryboard(autoPlay=false){
+ const b=autoPlay?$('aiMovie'):$('aiStoryboard');if(!b)return;b.disabled=true;b.textContent=autoPlay?'✦ Creating your movie…':'✧ AI is writing…';$('status').textContent='Step 1 of 2 · AI is writing your story scenes…';
+ try{const r=await requestAI('storyboard');const data=await r.json();if(!Array.isArray(data.scenes)||!data.scenes.length)throw new Error('The AI returned no scenes.');scenes=data.scenes.map((s,i)=>({title:String(s.title||'Scene '+(i+1)),description:String(s.description||''),dialogue:String(s.dialogue||''),action:['idle','run','jump','power','attack','celebrate'].includes(s.action)?s.action:'idle',duration:Math.max(2,Math.min(30,Number(s.duration)||5)),setting:s.setting||'Block World',hero:s.hero||'Block Noob',villain:s.villain||'Monster',kind:$('style').value,genre:$('genre').value}));sceneIndex=0;makeWorld($('style').value);setCamera();updateUI();$('status').textContent='Step 2 of 2 · Your 3D scenes are ready. Starting movie preview…';if(autoPlay){play();$('status').textContent='Your AI-written 3D movie is playing · Use Export WebM to save it'}}catch(e){$('status').textContent=e.message;alert(e.message)}finally{b.disabled=false;b.textContent=autoPlay?'✦ Create my movie with AI':'✧ Write scenes with AI'}
 }
 let generatedAIUrl=null;
 async function generateAIVideo(){
  const b=$('generateAI');b.disabled=true;b.textContent='Generating…';$('aiState').textContent='Sending prompt to AI model…';
  try{const r=await requestAI('video');const blob=await r.blob();if(!blob.size)throw new Error('The AI provider returned an empty video.');if(generatedAIUrl)URL.revokeObjectURL(generatedAIUrl);generatedAIUrl=URL.createObjectURL(blob);$('aiVideo').src=generatedAIUrl;$('aiVideo').style.display='block';$('downloadAI').style.display='inline-block';$('downloadAI').onclick=()=>{const a=document.createElement('a');a.href=generatedAIUrl;a.download='blockstory-ai-video.mp4';a.click()};$('aiState').textContent='Video generated · ready to preview'}catch(e){$('aiState').textContent='Generation failed';alert(e.message+'\n\nCheck that the backend is deployed and its Hugging Face token is configured.')}finally{b.disabled=false;b.textContent='✦ Generate AI video clip'}
 }
-$('aiStoryboard').onclick=generateAIStoryboard;$('generateAI').onclick=generateAIVideo;
+$('aiStoryboard')?.addEventListener('click',()=>generateAIStoryboard(false));$('aiMovie').onclick=()=>generateAIStoryboard(true);$('generateAI').onclick=generateAIVideo;
 $('generate').onclick=generate;$('saveScene').onclick=saveScene;$('addScene').onclick=addScene;$('deleteScene').onclick=deleteScene;$('play').onclick=play;$('pause').onclick=pause;$('reset').onclick=restart;$('export').onclick=exportVideo;$('camera').onchange=setCamera;$('saveProject').onclick=saveProject;$('loadProject').onclick=()=>$('projectFile').click();$('projectFile').onchange=e=>{if(e.target.files[0])loadProjectFile(e.target.files[0])};
 generate();requestAnimationFrame(loop);
 </script>
