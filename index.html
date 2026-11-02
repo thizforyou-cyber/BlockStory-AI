@@ -61,9 +61,12 @@ textarea,input,select{width:100%;border:1px solid #344157;background:#0d1420;col
 </section>
 </div>
 </main>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}
+</script>
 <script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/controls/OrbitControls.js';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 const $=id=>document.getElementById(id);
 const canvas=$('view');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,preserveDrawingBuffer:true});
