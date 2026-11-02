@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BlockStory AI — Story to Block Movie</title>
+<style>
+:root{--bg:#0b1020;--panel:#121a2e;--panel2:#18233b;--line:#293653;--text:#eef3ff;--muted:#98a7c4;--blue:#7c9cff;--cyan:#66e2d2;--pink:#d69cff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 70% -10%,#243b70 0,transparent 40%),var(--bg);color:var(--text);font:15px/1.5 Inter,ui-sans-serif,system-ui,Arial}
+button,input,textarea,select{font:inherit}button{cursor:pointer;border:0;border-radius:12px;padding:11px 15px;font-weight:700;background:var(--blue);color:#081126}button.secondary{background:#263452;color:var(--text);border:1px solid var(--line)}button:disabled{opacity:.45;cursor:not-allowed}
+header{height:68px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(16px,4vw,54px);background:#0b1020cc;position:sticky;top:0;z-index:5;backdrop-filter:blur(14px)}
+.brand{display:flex;align-items:center;gap:11px;font-weight:900;letter-spacing:.08em}.logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:grid;place-items:center;color:#091225;font-size:20px}
+.pill{font-size:11px;color:var(--cyan);border:1px solid #28665f;border-radius:99px;padding:4px 9px}
+main{max-width:1250px;margin:0 auto;padding:30px 20px 60px}.hero{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:24px}.eyebrow{color:var(--cyan);font-size:11px;letter-spacing:.18em;font-weight:800}.hero h1{font-size:clamp(28px,4vw,44px);line-height:1.08;margin:8px 0}.hero p{color:var(--muted);margin:0;max-width:620px}
+.layout{display:grid;grid-template-columns:360px minmax(0,1fr);gap:18px}.panel{background:linear-gradient(160deg,#17223a,#10182b);border:1px solid var(--line);border-radius:18px;padding:19px;box-shadow:0 16px 50px #0003}.panel h2{font-size:16px;margin:0 0 15px}.label{display:block;color:#bdc9df;font-size:12px;font-weight:750;margin:15px 0 7px}
+textarea,input,select{width:100%;border:1px solid var(--line);background:#0c1426;color:var(--text);border-radius:11px;padding:12px;outline:none}textarea:focus,input:focus,select:focus{border-color:var(--blue)}textarea{min-height:135px;resize:vertical}
+.row{display:flex;gap:9px}.row>*{flex:1;min-width:0}.hint{font-size:11px;color:var(--muted);margin-top:7px}.actions{display:flex;gap:9px;margin-top:16px;flex-wrap:wrap}.actions button{flex:1}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.stat{background:#0d172b;border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:11px;color:var(--muted)}
+.studio{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:14px}.preview-wrap{background:#070d18;border:1px solid var(--line);border-radius:14px;overflow:hidden;position:relative}.preview-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#111b30}.preview-head small{color:var(--muted)}canvas{display:block;width:100%;aspect-ratio:16/9;background:#101a2e}.canvas-foot{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;color:var(--muted);font-size:11px}
+.scene-list{display:flex;flex-direction:column;gap:8px;max-height:490px;overflow:auto}.scene{background:#0d172b;border:1px solid var(--line);padding:10px;border-radius:12px;text-align:left;color:var(--text)}.scene.active{border-color:var(--cyan);background:#102a35}.scene strong{display:block;font-size:12px}.scene span{font-size:11px;color:var(--muted)}
+.timeline{margin-top:14px;padding:13px;background:#0c1426;border:1px solid var(--line);border-radius:13px}.timeline-top{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-bottom:10px}.track{height:9px;border-radius:99px;background:#263452;overflow:hidden}.progress{height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--cyan));transition:width .2s}
+.notice{font-size:11px;color:var(--muted);margin-top:14px;padding:10px;border-left:2px solid var(--pink);background:#1a1830}
+@media(max-width:950px){.layout{grid-template-columns:1fr}.studio{grid-template-columns:1fr}.scene-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));max-height:none}}@media(max-width:560px){main{padding:20px 12px}.hero{display:block}.hero .pill{display:inline-block;margin-top:12px}.row{flex-direction:column}.scene-list{grid-template-columns:1fr}header{padding:0 14px}}
+</style></head>
+<body>
+<header><div class="brand"><div class="logo">▣</div> BLOCKSTORY <span style="color:var(--cyan)">AI</span></div><span class="pill">FREE BROWSER STUDIO</span></header>
+<main>
+<section class="hero"><div><div class="eyebrow">YOUR STORY, FRAME BY FRAME</div><h1>Make a block-world movie.</h1><p>Turn a story idea into an editable storyboard, animate it in a block-style scene, add narration and export a video — right in your browser.</p></div><span class="pill">No API key required</span></section>
+<div class="layout">
+<aside class="panel">
+<h2>✦ Create your story</h2>
+<label class="label" for="prompt">STORY IDEA</label>
+<textarea id="prompt">A brave Roblox noob discovers a giant monster attacking the city. He runs, finds a power crystal, transforms into a hero and saves everyone.</textarea>
+<div class="row"><div><label class="label" for="duration">VIDEO LENGTH</label><select id="duration"><option value="20">20 seconds</option><option value="30" selected>30 seconds</option><option value="45">45 seconds</option><option value="60">60 seconds</option></select></div><div><label class="label" for="mood">VISUAL MOOD</label><select id="mood"><option value="adventure">Adventure</option><option value="funny">Funny</option><option value="scary">Spooky</option><option value="epic">Epic</option></select></div></div>
+<label class="label" for="voice">NARRATION</label><select id="voice"><option value="on">Browser voice narration</option><option value="off">Subtitles only</option></select>
+<div class="actions"><button id="generate">✦ Generate storyboard</button></div>
+<div class="hint">Free mode uses procedural scene planning and animation. It does not call a paid generative-video model.</div>
+<div class="stats"><span class="stat" id="sceneCount">0 scenes</span><span class="stat">16:9 landscape</span><span class="stat">Local project</span></div>
+<div class="notice">For best results use a recent desktop or Android browser. Video export availability depends on browser support; WebM is the default format.</div>
+</aside>
+<section class="panel">
+<h2>🎬 Your movie studio</h2>
+<div class="studio">
+<div>
+<div class="preview-wrap">
+<div class="preview-head"><strong id="sceneTitle">Your preview will appear here</strong><small id="sceneNumber">SCENE 0 / 0</small></div>
+<canvas id="screen" width="960" height="540"></canvas>
+<div class="canvas-foot"><span id="sceneDescription">Generate a storyboard to begin.</span><span id="clock">00:00</span></div>
+</div>
+<div class="actions"><button class="secondary" id="play">▶ Play preview</button><button class="secondary" id="stop">■ Stop</button><button id="export">⬇ Export video</button></div>
+<div class="timeline"><div class="timeline-top"><span>VIDEO TIMELINE</span><span id="status">Ready</span></div><div class="track"><div class="progress" id="progress"></div></div></div>
+</div>
+<div><div class="preview-head" style="border-radius:12px;margin-bottom:9px"><strong>Storyboard</strong><small>EDITABLE</small></div><div class="scene-list" id="scenes"><div class="hint">Your generated scenes will appear here.</div></div></div>
+</div>
+</section>
+</div>
+</main>
+<script>
+const $=id=>document.getElementById(id), canvas=$('screen'),ctx=canvas.getContext('2d');
+let scenes=[],current=0,playing=false,raf=0,startAt=0,recorder=null,chunks=[],stream=null;
+const words=s=>(s.toLowerCase().match(/[a-z0-9']+/g)||[]);
+function planStory(prompt,duration,mood){
+ const w=words(prompt), has=(...xs)=>xs.some(x=>w.includes(x));
+ const hero=has('girl','woman','princess')?'Block Heroine':has('robot')?'Block Robot':'Block Noob';
+ const villain=has('zombie')?'Zombie':has('dragon')?'Dragon':has('alien')?'Alien':'Giant Monster';
+ const place=has('forest')?'Mystic Forest':has('school')?'Block School':has('space')?'Space Station':'Block City';
+ const beats=[['The beginning',`${hero} arrives at ${place}.`,'idle'],['A strange danger',`${villain} appears and everyone is surprised.`,'surprise'],['The chase',`${hero} runs through the block world to escape.`,'run'],['The turning point',`${hero} discovers a glowing power crystal.`,'power'],['The final battle',`${hero} faces ${villain} and makes a brave move.`,'jump'],['The happy ending',`${place} is safe again. ${hero} celebrates with the crowd.`,'win']];
+ const n=Math.max(3,Math.min(6,Math.round(duration/8))),chosen=beats.slice(0,n);
+ return chosen.map((b,i)=>({title:b[0],description:b[1],action:b[2],dialogue:i===0?`In ${place}, a new adventure begins.`:i===1?`Oh no! ${villain} is here!`:i===2?'Run! We need a plan!':i===3?'Wait... this crystal could help!':i===4?'This city is worth fighting for!':'We did it!',duration:duration/n,setting:place,hero,villain,mood,seed:i}));
+}
+function drawBlock(x,y,s,color){ctx.fillStyle=color;ctx.fillRect(x-s/2,y-s,s,s);ctx.fillStyle='#111827';ctx.fillRect(x-s*.28,y-s*.68,s*.12,s*.12);ctx.fillRect(x+s*.16,y-s*.68,s*.12,s*.12);ctx.fillStyle='#e8b18a';ctx.fillRect(x-s*.27,y-s*.35,s*.54,s*.1);ctx.fillStyle='#263452';ctx.fillRect(x-s*.4,y,s*.8,s*.65);ctx.fillStyle='#1b2740';ctx.fillRect(x-s*.37,y+s*.65,s*.28,s*.55);ctx.fillRect(x+s*.09,y+s*.65,s*.28,s*.55)}
+function draw(t=0){
+ const W=canvas.width,H=canvas.height,s=scenes[current];ctx.clearRect(0,0,W,H);
+ const palettes={adventure:['#14294b','#347b91'],funny:['#55346c','#d17c8a'],scary:['#10192b','#42536a'],epic:['#321f4d','#d28b58']},p=palettes[s?.mood||'adventure'];
+ let g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,p[0]);g.addColorStop(1,p[1]);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ for(let i=0;i<12;i++){let bw=50+(i%3)*18,bh=90+(i*47%130);ctx.fillStyle=i%2?'#172b43':'#203b58';ctx.fillRect(i*88,H-130-bh,bw,bh);for(let yy=H-120-bh;yy<H-145;yy+=28)for(let xx=i*88+10;xx<i*88+bw-8;xx+=22){ctx.fillStyle='#f5d78a88';ctx.fillRect(xx,yy,9,12)}}
+ ctx.fillStyle='#29465b';ctx.fillRect(0,H-130,W,130);ctx.fillStyle='#1c314b';ctx.fillRect(0,H-130,W,13);
+ for(let x=0;x<W;x+=70){ctx.fillStyle=x%140?'#38516a':'#405c73';ctx.fillRect(x,H-112,66,8)}
+ const bob=Math.sin(t/180)*5,hx=260+(s?.action==='run'?Math.sin(t/90)*28:0);
+ drawBlock(hx,H-190+bob,78,'#f1c44e');
+ if(current>=1){drawBlock(700,H-230+Math.sin(t/250)*5,112,s?.mood==='scary'?'#75a0a0':'#9b70d5');ctx.fillStyle='#f46e72';ctx.fillRect(680,H-265,12,10);ctx.fillRect(710,H-265,12,10)}
+ if(s?.action==='power'){ctx.fillStyle='#7cf4e3';ctx.shadowColor='#7cf4e3';ctx.shadowBlur=35;ctx.beginPath();ctx.arc(440,H-245,32+Math.sin(t/90)*5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0}
+ if(s?.action==='jump'){ctx.fillStyle='#f7dc80';ctx.font='bold 32px system-ui';ctx.fillText('POW!',430,H-330)}
+ ctx.fillStyle='#fff';ctx.font='bold 25px system-ui';ctx.fillText(s?.title||'BLOCKSTORY AI',32,48);
+ ctx.font='16px system-ui';ctx.fillStyle='#dce8f7';wrapText(s?.description||'Generate a story to create your first scene.',32,80,700,25);
+ ctx.fillStyle='#07101fbb';ctx.fillRect(24,H-76,W-48,48);ctx.fillStyle='#fff';ctx.font='bold 19px system-ui';ctx.fillText(s?.dialogue||'Your story starts here...',42,H-45);
+}
+function wrapText(text,x,y,max,line){let words=text.split(' '),str='';for(let w of words){let test=str+w+' ';if(ctx.measureText(test).width>max&&str){ctx.fillText(str,x,y);str=w+' ';y+=line}else str=test}ctx.fillText(str,x,y)}
+function renderList(){ $('sceneCount').textContent=scenes.length+' scenes';$('scenes').innerHTML='';scenes.forEach((s,i)=>{let b=document.createElement('button');b.className='scene'+(i===current?' active':'');b.innerHTML='<strong>0'+(i+1)+' · '+s.title+'</strong><span>'+s.description+'</span>';b.onclick=()=>{current=i;refresh();draw(performance.now())};$('scenes').appendChild(b)});refresh()}
+function refresh(){let s=scenes[current];$('sceneTitle').textContent=s?s.title:'Your preview will appear here';$('sceneNumber').textContent=`SCENE ${scenes.length?current+1:0} / ${scenes.length}`;$('sceneDescription').textContent=s?s.description:'Generate a storyboard to begin.';renderSceneButtons();draw(performance.now())}
+function renderSceneButtons(){document.querySelectorAll('.scene').forEach((b,i)=>b.classList.toggle('active',i===current))}
+function generate(){let p=$('prompt').value.trim();if(!p){alert('Write a story idea first.');return}scenes=planStory(p,+$('duration').value,$('mood').value);current=0;renderList();$('status').textContent='Storyboard ready';draw(performance.now())}
+function tick(now){if(!playing)return;let elapsed=(now-startAt)/1000,total=scenes.reduce((a,s)=>a+s.duration,0);if(elapsed>=total){playing=false;$('status').textContent='Preview finished';$('progress').style.width='100%';return}let acc=0,idx=0;for(;idx<scenes.length-1;idx++){if(elapsed<acc+scenes[idx].duration)break;acc+=scenes[idx].duration}if(idx!==current){current=idx;refresh()}draw(now);$('clock').textContent='00:'+String(Math.floor(elapsed)).padStart(2,'0');$('progress').style.width=(elapsed/total*100)+'%';raf=requestAnimationFrame(tick)}
+function play(){if(!scenes.length)generate();if(!scenes.length)return;playing=true;startAt=performance.now();$('status').textContent='Playing preview';cancelAnimationFrame(raf);raf=requestAnimationFrame(tick)}
+function stop(){playing=false;cancelAnimationFrame(raf);$('status').textContent='Preview paused';draw(performance.now())}
+function speak(text){if($('voice').value==='off'||!('speechSynthesis'in window))return;speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(text);u.rate=1.02;speechSynthesis.speak(u)}
+async function exportVideo(){
+ if(!scenes.length)generate();if(!scenes.length)return;
+ if(!canvas.captureStream||!window.MediaRecorder){alert('This browser does not support canvas video recording. Try a recent Chrome browser.');return}
+ stop();let total=scenes.reduce((a,s)=>a+s.duration,0);stream=canvas.captureStream(30);
+ let mime=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(t=>MediaRecorder.isTypeSupported(t))||'';
+ try{recorder=new MediaRecorder(stream,mime?{mimeType:mime}:{});}catch(e){alert('Could not start video recording in this browser.');return}
+ chunks=[];recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+ recorder.onstop=()=>{let blob=new Blob(chunks,{type:recorder.mimeType||'video/webm'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='blockstory-movie.webm';a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);$('status').textContent='Video downloaded';$('export').disabled=false;stream.getTracks().forEach(t=>t.stop())};
+ $('export').disabled=true;$('status').textContent='Recording video…';recorder.start(250);let elapsed=0;
+ for(let i=0;i<scenes.length;i++){current=i;refresh();speak(scenes[i].dialogue);let start=performance.now(),dur=scenes[i].duration*1000;while(performance.now()-start<dur){draw(performance.now());elapsed+=16;$('progress').style.width=(Math.min(100,elapsed/(total*1000)*100))+'%';$('clock').textContent='00:'+String(Math.floor(elapsed/1000)).padStart(2,'0');await new Promise(r=>setTimeout(r,16))}}
+ if(recorder.state!=='inactive')recorder.stop();if('speechSynthesis'in window)speechSynthesis.cancel();
+}
+$('generate').onclick=generate;$('play').onclick=play;$('stop').onclick=stop;$('export').onclick=exportVideo;
+generate();
+</script></body></html>
