@@ -44,15 +44,12 @@ textarea,input,select{width:100%;border:1px solid #344157;background:#0d1420;col
 </div>
 <div class="panel timeline-panel"><div class="timeline-head"><h2>3. Scene timeline</h2><span class="status" id="totalTime">30 seconds</span></div><div class="scene-strip" id="sceneStrip"></div></div>
 <div class="panel timeline-panel" id="aiVideoPanel">
- <div class="timeline-head"><h2>✦ AI video generation</h2><span class="status" id="aiState">Not connected yet</span></div>
- <p class="hint">Generate a short original video clip from your story prompt using a hosted AI video model. This is separate from the editable 3D preview.</p>
- <div class="row"><div><label class="label" for="aiModel">VIDEO MODEL</label><select id="aiModel"><option value="Wan-AI/Wan2.2-TI2V-5B">Wan 2.2 · text to video</option></select></div><div><label class="label" for="aiProvider">PROVIDER</label><select id="aiProvider"><option value="fal-ai">Hugging Face routed · fal.ai</option></select></div></div>
- <button id="generateAI" class="full">✦ Generate AI video clip</button>
- <video id="aiVideo" controls playsinline style="display:none;width:100%;margin-top:14px;border-radius:10px;background:#080d19"></video>
- <div class="editor-actions"><button class="secondary" id="downloadAI" style="display:none">⬇ Download AI clip</button></div>
- <div class="disclaimer">Requires the BlockStory AI server to be deployed with a private Hugging Face token. The token must stay on the server, never in this page. Free inference credits are very small and can run out; longer or repeated clips may cost money.</div>
-</div>
-<div class="editor-grid">
+  <div class="timeline-head"><h2>✦ AI video footage</h2><span class="status" id="aiState">Paused</span></div>
+  <p class="hint">Direct AI footage generation is temporarily paused because the free video provider has run out of credits. You do not need to buy credits.</p>
+  <p class="hint">Use <strong>Create my movie with AI</strong> above to write your story with Gemini and play it as an editable 3D block-world movie. You can export that movie as WebM.</p>
+  <button id="generateAI" class="full" disabled>AI footage generation unavailable</button>
+ </div>
+ <div class="editor-grid">
 <div class="panel"><h2>✎ 4. Edit selected scene</h2>
 <label class="label" for="editTitle">SCENE NAME</label><input id="editTitle" value="The beginning">
 <label class="label" for="editAction">WHAT HAPPENS</label><textarea id="editAction" style="min-height:70px"></textarea>
