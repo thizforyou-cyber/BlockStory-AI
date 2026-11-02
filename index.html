@@ -44,10 +44,19 @@ textarea,input,select{width:100%;border:1px solid #344157;background:#0d1420;col
 </div>
 <div class="panel timeline-panel"><div class="timeline-head"><h2>3. Scene timeline</h2><span class="status" id="totalTime">30 seconds</span></div><div class="scene-strip" id="sceneStrip"></div></div>
 <div class="panel timeline-panel" id="aiVideoPanel">
-  <div class="timeline-head"><h2>✦ AI video footage</h2><span class="status" id="aiState">Paused</span></div>
-  <p class="hint">Direct AI footage generation is temporarily paused because the free video provider has run out of credits. You do not need to buy credits.</p>
-  <p class="hint">Use <strong>Create my movie with AI</strong> above to write your story with Gemini and play it as an editable 3D block-world movie. You can export that movie as WebM.</p>
-  <button id="generateAI" class="full" disabled>AI footage generation unavailable</button>
+  <div class="timeline-head"><h2>✦ Free AI video engine</h2><span class="status" id="aiState">Public GPU · shared queue</span></div>
+  <p class="hint">Generate real text-to-video clips with the public LTX Video model hosted on Hugging Face. No provider API key or payment method is needed. Free GPU access is shared, so waiting times, daily limits and temporary outages can happen.</p>
+  <label class="label" for="freeVideoPrompt">PROMPT FOR YOUR ROBLOX-STYLE CLIP</label>
+  <textarea id="freeVideoPrompt" rows="4" readonly></textarea>
+  <div class="editor-actions">
+    <button class="secondary" id="copyFreePrompt">Copy video prompt</button>
+    <a id="openFreeEngine" href="https://huggingface.co/spaces/Lightricks/ltx-video-distilled" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;text-decoration:none;border-radius:10px;padding:10px 13px;background:#9db6ff;color:#101827;font-weight:750;font-size:11px">Open free video generator ↗</a>
+  </div>
+  <div class="public-engine-frame" style="margin-top:14px;border:1px solid #29364b;border-radius:11px;overflow:hidden;background:#0d1420">
+    <iframe title="Public LTX text-to-video generator" src="https://lightricks-ltx-video-distilled.hf.space?__theme=dark" loading="lazy" allow="clipboard-write; fullscreen" allowfullscreen style="display:block;width:100%;height:760px;border:0;background:#0d1420"></iframe>
+  </div>
+  <p class="hint">How to use: copy the prompt above, paste it into the generator, submit it and wait for the public GPU queue. Download the MP4 from the generator when it finishes. Then use the 3D editor above for your editable storyboard and WebM export.</p>
+  <p class="disclaimer">This is a community-hosted public model, not unlimited private GPU hosting. Hugging Face controls the shared queue and usage allowance. Do not upload private or sensitive images.</p>
  </div>
  <div class="editor-grid">
 <div class="panel"><h2>✎ 4. Edit selected scene</h2>
@@ -196,12 +205,31 @@ async function generateAIStoryboard(autoPlay=false){
  const b=autoPlay?$('aiMovie'):$('aiStoryboard');if(!b)return;b.disabled=true;b.textContent=autoPlay?'✦ Creating your movie…':'✧ AI is writing…';$('status').textContent='Step 1 of 2 · AI is writing your story scenes…';
  try{const r=await requestAI('storyboard');const data=await r.json();if(!Array.isArray(data.scenes)||!data.scenes.length)throw new Error('The AI returned no scenes.');scenes=data.scenes.map((s,i)=>({title:String(s.title||'Scene '+(i+1)),description:String(s.description||''),dialogue:String(s.dialogue||''),action:['idle','run','jump','power','attack','celebrate'].includes(s.action)?s.action:'idle',duration:Math.max(2,Math.min(30,Number(s.duration)||5)),setting:s.setting||'Block World',hero:s.hero||'Block Noob',villain:s.villain||'Monster',kind:$('style').value,genre:$('genre').value}));sceneIndex=0;makeWorld($('style').value);setCamera();updateUI();$('status').textContent='Step 2 of 2 · Your 3D scenes are ready. Starting movie preview…';if(autoPlay){play();$('status').textContent='Your AI-written 3D movie is playing · Use Export WebM to save it'}}catch(e){$('status').textContent=e.message;alert(e.message)}finally{b.disabled=false;b.textContent=autoPlay?'✦ Create my movie with AI':'✧ Write scenes with AI'}
 }
-let generatedAIUrl=null;
-async function generateAIVideo(){
- const b=$('generateAI');b.disabled=true;b.textContent='Generating…';$('aiState').textContent='Sending prompt to AI model…';
- try{const r=await requestAI('video');const blob=await r.blob();if(!blob.size)throw new Error('The AI provider returned an empty video.');if(generatedAIUrl)URL.revokeObjectURL(generatedAIUrl);generatedAIUrl=URL.createObjectURL(blob);$('aiVideo').src=generatedAIUrl;$('aiVideo').style.display='block';$('downloadAI').style.display='inline-block';$('downloadAI').onclick=()=>{const a=document.createElement('a');a.href=generatedAIUrl;a.download='blockstory-ai-video.mp4';a.click()};$('aiState').textContent='Video generated · ready to preview'}catch(e){$('aiState').textContent='Generation failed';alert(e.message+'\n\nCheck that the backend is deployed and its Hugging Face token is configured.')}finally{b.disabled=false;b.textContent='✦ Generate AI video clip'}
+function buildFreeVideoPrompt(){
+ const prompt=$('prompt').value.trim()||'A blocky game hero begins an adventure';
+ const style=$('style').selectedOptions[0]?.textContent||'Block city';
+ const genre=$('genre').selectedOptions[0]?.textContent||'Adventure';
+ return 'Create a short cinematic 3D animated video in an original Roblox-inspired blocky sandbox game aesthetic. Use chunky geometric characters, expressive movement, colorful game environments, smooth camera motion and polished game-like lighting. World: '+style+'. Mood: '+genre+'. Story: '+prompt+'. Keep the main block character visually consistent throughout this single clip. No logos, no copyrighted characters, no subtitles or text overlays.';
 }
-$('aiStoryboard')?.addEventListener('click',()=>generateAIStoryboard(false));$('aiMovie').onclick=()=>generateAIStoryboard(true);$('generateAI').onclick=generateAIVideo;
+function refreshFreeVideoPrompt(){
+ const field=$('freeVideoPrompt');if(field)field.value=buildFreeVideoPrompt();
+}
+async function copyFreeVideoPrompt(){
+ refreshFreeVideoPrompt();
+ const value=$('freeVideoPrompt').value;
+ try{
+  await navigator.clipboard.writeText(value);
+  $('aiState').textContent='Prompt copied · paste it into the generator';
+ }catch(e){
+  $('freeVideoPrompt').focus();$('freeVideoPrompt').select();
+  $('aiState').textContent='Select and copy the prompt, then paste it into the generator';
+ }
+}
+$('copyFreePrompt').onclick=copyFreeVideoPrompt;
+$('prompt').addEventListener('input',refreshFreeVideoPrompt);
+$('style').addEventListener('change',refreshFreeVideoPrompt);
+$('genre').addEventListener('change',refreshFreeVideoPrompt);
+refreshFreeVideoPrompt();
 $('generate').onclick=generate;$('saveScene').onclick=saveScene;$('addScene').onclick=addScene;$('deleteScene').onclick=deleteScene;$('play').onclick=play;$('pause').onclick=pause;$('reset').onclick=restart;$('export').onclick=exportVideo;$('camera').onchange=setCamera;$('saveProject').onclick=saveProject;$('loadProject').onclick=()=>$('projectFile').click();$('projectFile').onchange=e=>{if(e.target.files[0])loadProjectFile(e.target.files[0])};
 generate();requestAnimationFrame(loop);
 </script>
