@@ -126,18 +126,20 @@ function makeWorld(kind){
  crystal=new THREE.Mesh(new THREE.OctahedronGeometry(.75),mats.glow);crystal.position.set(0,2,0);crystal.castShadow=true;world.add(crystal);crystal.userData.dynamic=true;
 }
 function storyPlan(prompt,duration,kind,genre){
- const t=prompt.toLowerCase(),heroName=t.includes('girl')?'Block Heroine':t.includes('robot')?'Block Robot':'Block Noob';
- const enemy=t.includes('zombie')?'Zombie':t.includes('dragon')?'Dragon':t.includes('alien')?'Alien':'Giant Monster';
+ const text=prompt.replace(/\s+/g,' ').trim();
+ const sentences=text.split(/(?<=[.!?])\s+|\s*;\s*/).map(x=>x.trim()).filter(Boolean);
+ const words=text.toLowerCase();
+ const heroName=/\b(girl|she|her)\b/.test(words)?'Block Heroine':/\b(robot|android)\b/.test(words)?'Block Robot':/\b(king|queen|prince|princess)\b/.test(words)?'Block Royal': 'Block Hero';
+ const enemy=/zombie/.test(words)?'Zombie':/dragon/.test(words)?'Dragon':/alien/.test(words)?'Alien':/robber|thief/.test(words)?'Thief':/monster|villain|enemy/.test(words)?'Villain':'Rival';
  const place=kind==='forest'?'Mystic Forest':kind==='school'?'Block School':kind==='space'?'Space Station':'Block City';
- const beats=[
- ['The beginning',heroName+' arrives at '+place+'.','In '+place+', a new adventure begins.','idle'],
- ['The danger appears',enemy+' suddenly appears and scares everyone.','Oh no! '+enemy+' is here!','surprise'],
- ['The escape',heroName+' runs through the world to find safety.','Run! We need a plan!','run'],
- ['A new power',heroName+' discovers a glowing power crystal.','Wait... this crystal could help!','power'],
- ['The final battle',heroName+' faces '+enemy+' in an epic fight.','This city is worth fighting for!','attack'],
- ['The happy ending',place+' is safe again. '+heroName+' celebrates.','We did it! Everyone is safe!','celebrate']];
- const count=Math.max(3,Math.min(6,Math.round(duration/8)));
- return beats.slice(0,count).map((b,i)=>({title:b[0],description:b[1],dialogue:b[2],action:(b[3]==='surprise'?'idle':b[3]),duration:duration/count,setting:place,hero:heroName,villain:enemy,kind,genre}));
+ const actionFor=s=>{const x=s.toLowerCase();if(/run|escape|chase|flee|rush/.test(x))return 'run';if(/jump|leap|fall|climb/.test(x))return 'jump';if(/fight|attack|battle|punch|kick|defend/.test(x))return 'attack';if(/power|magic|crystal|transform|glow/.test(x))return 'power';if(/win|save|celebrat|happy|success|rescue/.test(x))return 'celebrate';return 'idle'};
+ const titleFor=(s,i)=>{const x=s.toLowerCase();if(i===0)return 'The story begins';if(/meet|arriv|enter|discover|find/.test(x))return 'A new discovery';if(/run|escape|chase|flee/.test(x))return 'The chase';if(/fight|attack|battle|punch/.test(x))return 'The showdown';if(/secret|mystery|reveal|truth/.test(x))return 'A big surprise';if(/save|rescue|help/.test(x))return 'The rescue';if(/win|celebrat|finally|home|safe/.test(x))return 'The ending';return 'Scene '+(i+1)};
+ let beats=sentences.slice(0,8);
+ if(beats.length<3)beats=[text, 'A new problem changes everything.', 'The hero makes a brave choice.', 'The story reaches its big moment.', 'The adventure comes to an end.'];
+ else if(beats.length<5){beats=[...beats,'The challenge reaches its biggest moment.','The story comes to a satisfying ending.']}
+ const count=Math.max(3,Math.min(8,beats.length,Math.round(duration/6)));
+ const chosen=beats.slice(0,count);
+ return chosen.map((line,i)=>({title:titleFor(line,i),description:line,dialogue:line.length>92?line.slice(0,89)+'…':line,action:actionFor(line),duration:duration/count,setting:place,hero:heroName,villain:enemy,kind,genre}));
 }
 function selected(){return scenes[sceneIndex]}
 function updateEditor(){const s=selected();if(!s)return;$('editTitle').value=s.title;$('editAction').value=s.description;$('editDialogue').value=s.dialogue;$('editDuration').value=Math.round(s.duration);$('editMove').value=s.action}
@@ -155,11 +157,12 @@ function updateCharacterMotion(t){
  const action=s.action;const wave=Math.sin(t*4);
  hero.position.x=-3+(action==='run'?Math.sin(t*3)*1.2:action==='attack'?Math.sin(t*5)*.8:0);
  hero.position.y=action==='jump'?Math.abs(wave)*1.7:action==='celebrate'?Math.abs(wave)*.45:0;
- hero.rotation.y=action==='attack'?Math.sin(t*3)*.45:Math.sin(t*.4)*.08;
- hero.userData.armL.rotation.z=action==='run'?Math.sin(t*8)*.65:action==='celebrate'?Math.sin(t*6)*.8:action==='attack'?-1.1:0;
- hero.userData.armR.rotation.z=action==='run'?-Math.sin(t*8)*.65:action==='celebrate'?-Math.sin(t*6)*.8:action==='attack'?1.1:0;
- hero.userData.legL.rotation.x=action==='run'?Math.sin(t*8)*.6:0;hero.userData.legR.rotation.x=action==='run'?-Math.sin(t*8)*.6:0;
+ hero.rotation.y=action==='attack'?Math.sin(t*3)*.45:action==='run'?Math.sin(t*3)*.12:Math.sin(t*.4)*.08;
+ hero.userData.armL.rotation.z=action==='run'?Math.sin(t*8)*.65:action==='celebrate'?Math.sin(t*6)*.8:action==='attack'?-1.1:action==='power'?-0.9:0;
+ hero.userData.armR.rotation.z=action==='run'?-Math.sin(t*8)*.65:action==='celebrate'?-Math.sin(t*6)*.8:action==='attack'?1.1:action==='power'?0.9:0;
+ hero.userData.legL.rotation.x=action==='run'?Math.sin(t*8)*.6:action==='jump'?-.35:0;hero.userData.legR.rotation.x=action==='run'?-Math.sin(t*8)*.6:action==='jump'?.35:0;
  villain.position.x=5+(action==='attack'?-Math.sin(t*2)*1.4:0);villain.position.y=Math.sin(t*2)*.12;
+ villain.rotation.y=action==='attack'?Math.PI+Math.sin(t*2)*.3:Math.PI;
  crystal.rotation.y=t*1.2;crystal.position.y=2+Math.sin(t*2)*.2;
 }
 function setCamera(){
