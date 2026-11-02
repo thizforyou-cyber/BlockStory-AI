@@ -22,7 +22,7 @@ textarea,input,select{width:100%;border:1px solid #344157;background:#0d1420;col
 <body>
 <header><div class="brand"><div class="mark">▣</div> BLOCKSTORY <span style="color:var(--cyan)">AI</span></div><div class="header-right">3D STORY STUDIO · BROWSER EDITION</div></header>
 <main>
-<section class="intro"><div><div class="eyebrow">FROM ONE IDEA TO A BLOCK-WORLD MOVIE</div><h1>Your story. Your 3D movie.</h1><p>Write a story, build connected scenes, edit the action and record your preview.</p></div><span class="tag">Free browser prototype</span></section>
+<section class="intro"><div><div class="eyebrow">FROM ONE IDEA TO A BLOCK-WORLD MOVIE</div><h1>Your story. Your 3D movie.</h1><p>Write a story, build connected scenes, edit the action and record your preview.</p></div><span class="tag">3D editor · optional hosted AI</span></section>
 <div class="workspace">
 <aside class="panel">
 <h2>✦ 1. Create your story</h2>
@@ -131,7 +131,7 @@ function storyPlan(prompt,duration,kind,genre){
  ['The final battle',heroName+' faces '+enemy+' in an epic fight.','This city is worth fighting for!','attack'],
  ['The happy ending',place+' is safe again. '+heroName+' celebrates.','We did it! Everyone is safe!','celebrate']];
  const count=Math.max(3,Math.min(6,Math.round(duration/8)));
- return beats.slice(0,count).map((b,i)=>({title:b[0],description:b[1],dialogue:b[2],action:b[3],duration:duration/count,setting:place,hero:heroName,villain:enemy,kind,genre}));
+ return beats.slice(0,count).map((b,i)=>({title:b[0],description:b[1],dialogue:b[2],action:(b[3]==='surprise'?'idle':b[3]),duration:duration/count,setting:place,hero:heroName,villain:enemy,kind,genre}));
 }
 function selected(){return scenes[sceneIndex]}
 function updateEditor(){const s=selected();if(!s)return;$('editTitle').value=s.title;$('editAction').value=s.description;$('editDialogue').value=s.dialogue;$('editDuration').value=Math.round(s.duration);$('editMove').value=s.action}
