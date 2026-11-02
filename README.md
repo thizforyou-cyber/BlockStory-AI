@@ -1,33 +1,42 @@
 # BlockStory AI
 
-A free-first, browser-based foundation for the user's goal: enter a short story idea and turn it into a connected block-world movie, with as little manual editing as possible.
+A simple, website-only studio for making block-world 3D story videos. The current version runs as a static GitHub Pages website and uses Three.js for interactive 3D scenes.
 
-## Publish as a website
+## Publish the website
 
 1. Open **Settings → Pages** in this repository.
-2. Under **Build and deployment**, choose **Deploy from a branch**.
-3. Select branch **main** and folder **/(root)**, then save.
-4. Open the published Pages URL shown in that section.
+2. Under **Build and deployment**, select **Deploy from a branch**.
+3. Choose branch **main** and folder **/(root)**, then save.
+4. Open the Pages URL GitHub displays.
 
-## Features in this browser prototype
+## What works in the current browser version
 
-- Story idea input, video duration and visual mood.
-- Automatic story beat / storyboard generation.
-- A recurring hero and villain identity across the generated scenes.
-- Animated block-style canvas preview with scene titles and dialogue captions.
-- Browser speech narration (when supported by the browser).
-- Scene selection plus an editor to change title, action text, dialogue and duration.
-- Add and delete scenes.
-- Record the animation and download a WebM video in supported browsers.
-- Static website: no desktop app, install, server or paid API key required for this prototype.
+- Enter a story prompt and generate a connected scene outline.
+- Create a block-style 3D city or forest with a hero, enemy and glowing object.
+- Preview 3D characters and basic actions: idle, run, jump, power-up, attack and celebrate.
+- Drag the preview to rotate the camera; choose wide, close or cinematic camera framing.
+- Edit scene title, action, dialogue, duration and character action.
+- Add and delete scenes, play the sequence, and record a WebM video in supported browsers.
+- Save and reopen a project as JSON.
+- No desktop application or mandatory API key is needed for this prototype.
 
-## Important truth about the current version
+## Important: what is not AI yet
 
-This is **not yet a full AI video generator**. The current story planner uses simple rules and the visuals are procedural 2D canvas animation. It does not yet generate true 3D Roblox characters, AI-generated environments, realistic character motion, automatic cinematic camera work, or a guaranteed MP4 file. Browser speech synthesis is not embedded as an audio track in the exported video. Those features need a suitable generation/rendering engine and compute service; a static free website alone cannot provide unlimited high-quality AI video generation.
+The prompt-to-story planner is currently rule-based, and the 3D characters/world are built from procedural geometry. This is a working 3D browser editor foundation, **not yet a true generative text-to-video model**. The exported WebM captures the 3D preview; browser speech is not mixed into the exported video as an audio track.
 
-## Project files
+To generate original AI video clips from text, the site needs a server-side GPU inference service. A static GitHub Pages site cannot host a large video model or provide unlimited free GPU rendering. We should add that as a separate connected backend only when a suitable hosting budget/compute option is chosen.
 
-- `index.html` — website, styling, story planner, scene editor, preview and WebM export.
+## Open-source projects used / evaluated
+
+- **Three.js** — used in the website for WebGL 3D rendering and camera controls. MIT license. https://github.com/mrdoob/three.js
+- **Wan2.1** — evaluated as a possible future text-to-video model. Apache-2.0 repository and supports text-to-video, but inference requires a GPU-backed service. Its published T2V-1.3B setup lists 8.19 GB VRAM and reports about four minutes for a five-second 480p video on an RTX 4090, so it is not a free static-browser feature. https://github.com/Wan-Video/Wan2.1
+- **Theatre.js** — possible future timeline/keyframe tool for more detailed 3D animation. Review its package-specific licenses before integrating the editor package. https://github.com/theatre-js/theatre
+- **Braincut** — evaluated as a possible browser video-editor reference (MIT). It is a separate application, not copied into this repository. https://github.com/swimmingbrain/braincut
+
+See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for dependency notices.
+
+## Files
+
+- `index.html` — complete website, 3D scene builder, storyboard editor, preview and WebM recording.
 - `README.md` — setup and feature notes.
-
-The project is intentionally dependency-free so it can be hosted as a static website.
+- `THIRD_PARTY_NOTICES.md` — open-source attributions and license notes.
